@@ -7,141 +7,6 @@
 bindkey -e
 
 # ---------------------------------------------------------------------------
-# Character classification helpers (VS Code–ish)
-# ---------------------------------------------------------------------------
-
-_zle_is_space() {
-  [[ "$1" == " " || "$1" == $'\t' ]]
-}
-
-_zle_is_word() {
-  case "$1" in
-    [A-Za-z0-9_]) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-_zle_is_punct() {
-  case "$1" in
-    '`'|'~'|'!'|'@'|'#'|'%'|'^'|'&'|'*'|'('|')'|'-'|'='|'+'|'['|']'|'{'|'}'|'\'|'|'|';'|':'|','|'.'|'<'|'>'|'/'|'?')
-      return 0 ;;
-    *)
-      return 1 ;;
-  esac
-}
-
-# ---------------------------------------------------------------------------
-# Forward word (VS Code–like)
-# ---------------------------------------------------------------------------
-
-zle_vscode_forward_word() {
-  local buf="$BUFFER"
-  local len=${#buf}
-  local i=$CURSOR
-
-  (( i >= len )) && return
-
-  # Skip whitespace
-  while (( i < len )) && _zle_is_space "${buf[i+1]}"; do
-    (( i++ ))
-  done
-
-  (( i >= len )) && { CURSOR=$i; return }
-
-  local ch="${buf[i+1]}"
-
-  # ---- SPECIAL CASE: "--" group ----
-  if [[ "$ch" == "-" && "${buf[i+2]}" == "-" ]]; then
-    while (( i < len )) && [[ "${buf[i+1]}" == "-" ]]; do
-      (( i++ ))
-    done
-    CURSOR=$i
-    return
-  fi
-
-  # Number (keep decimals together)
-  if [[ "$ch" == [0-9] ]]; then
-    while (( i < len )) && [[ "${buf[i+1]}" == [0-9.] ]]; do
-      (( i++ ))
-    done
-    CURSOR=$i
-    return
-  fi
-
-  # Word
-  if _zle_is_word "$ch"; then
-    while (( i < len )) && _zle_is_word "${buf[i+1]}"; do
-      (( i++ ))
-    done
-    CURSOR=$i
-    return
-  fi
-
-  # Punctuation
-  (( i++ ))
-  CURSOR=$i
-}
-
-
-# ---------------------------------------------------------------------------
-# Backward word (VS Code–like)
-# ---------------------------------------------------------------------------
-
-zle_vscode_backward_word() {
-  local buf="$BUFFER"
-  local i=$CURSOR
-
-  (( i <= 0 )) && return
-
-  # Skip whitespace
-  while (( i > 0 )) && _zle_is_space "${buf[i]}"; do
-    (( i-- ))
-  done
-
-  (( i <= 0 )) && { CURSOR=$i; return }
-
-  local ch="${buf[i]}"
-
-  # ---- SPECIAL CASE: "--" group ----
-  if [[ "$ch" == "-" && "${buf[i-1]}" == "-" ]]; then
-    while (( i > 0 )) && [[ "${buf[i]}" == "-" ]]; do
-      (( i-- ))
-    done
-    CURSOR=$i
-    return
-  fi
-
-  # Number
-  if [[ "$ch" == [0-9] ]]; then
-    while (( i > 0 )) && [[ "${buf[i]}" == [0-9.] ]]; do
-      (( i-- ))
-    done
-    CURSOR=$i
-    return
-  fi
-
-  # Word
-  if _zle_is_word "$ch"; then
-    while (( i > 0 )) && _zle_is_word "${buf[i]}"; do
-      (( i-- ))
-    done
-    CURSOR=$i
-    return
-  fi
-
-  # Punctuation
-  (( i-- ))
-  CURSOR=$i
-}
-
-# ---------------------------------------------------------------------------
-# Register widgets
-# ---------------------------------------------------------------------------
-
-zle -N vscode-forward-word zle_vscode_forward_word
-zle -N vscode-backward-word zle_vscode_backward_word
-
-# ---------------------------------------------------------------------------
 # Key bindings
 # ---------------------------------------------------------------------------
 
@@ -160,6 +25,7 @@ bindkey '^[d' kill-word             # Option + d
 ###############################################################################
 # End VS Code–like word navigation
 ###############################################################################
+[[ -f ~/.zsh/zsh-vscode-word-delimiter.zsh ]] && source ~/.zsh/zsh-vscode-word-delimiter.zsh
 
 export BUN_INSTALL="$HOME/.bun" 
 
@@ -195,34 +61,36 @@ compinit
 
 zstyle ':completion:*' menu select
 
-eval "$(fnm env --use-on-cd --shell zsh)"
-eval "$(zoxide init zsh)"
-# eval "$(pyenv init -)"
-
-eval "$(direnv hook zsh)"
 source $(brew --prefix)/opt/spaceship/spaceship.zsh
 [[ -r "$HOME/.zsh/plugins/spaceship-react/spaceship-react.plugin.zsh" ]] && source "$HOME/.zsh/plugins/spaceship-react/spaceship-react.plugin.zsh"
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
-
-export PATH="$HOME/fvm/bin:$HOME/fvm/default/bin:$PATH"
-export PATH="$BUN_INSTALL/bin:$PATH"
-export ZSH_CUSTOM="$HOME/.zsh"
-
-# if [ "$TMUX" = "" ]; then tmux; fi
-
-if [[ "$INSIDE_IDE" != "1" && -z "$TMUX" && $- == *i* ]] && command -v tmux >/dev/null; then
-  tmux
-fi
 
 ## [Completion]
 ## Completion scripts setup. Remove the following line to uninstall
 [[ -f $HOME/.dart-cli-completion/zsh-config.zsh ]] && . $HOME/.dart-cli-completion/zsh-config.zsh || true
 ## [/Completion]
 
-
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
+export PATH="$HOME/fvm/bin:$HOME/fvm/default/bin:$PATH"
+export PATH="$BUN_INSTALL/bin:$PATH"
+export ZSH_CUSTOM="$HOME/.zsh"
+export ANDROID_HOME="$HOMEBREW_PREFIX/share/android-commandlinetools"
+export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"
+export PATH="$PATH:$ANDROID_HOME/platform-tools"
 export ZSH_HISTORY_SYNC_SCRIPT_PATH=$HOME/.zsh/plugins/zsh-history-sync/sync-history.sh
 export ZSH_HISTORY_SYNC_GIT_REPO_PATH=
 export ZSH_HISTORY_SYNC_GPG_KEY_UID=
 export PATH="$(brew --prefix)/opt/postgresql@18/bin:$PATH"
+export PATH="$HOME/.jenv/bin:$PATH"
+
+eval "$(fnm env --use-on-cd --shell zsh)"
+eval "$(zoxide init zsh)"
+# eval "$(pyenv init -)"
+eval "$(rbenv init - --no-rehash zsh)"
+eval "$(direnv hook zsh)"
+eval "$(jenv init -)"
+
+if [[ "$INSIDE_IDE" != "1" && -z "$TMUX" && $- == *i* ]] && command -v tmux >/dev/null; then
+  tmux
+fi
+
+alias emulator="$ANDROID_HOME/emulator/emulator -avd android-emu-35 -accel on -gpu host -memory 4096 -no-boot-anim"
