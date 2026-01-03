@@ -10,7 +10,11 @@ done
 
 yabai -m query --windows --space | jq -c '.[]' | while read w; do
   ID=$(echo "$w" | jq '.id')
+  IS_MANAGED=$(echo "$w" | jq '.["is-managed"]')
   IS_FLOAT=$(echo "$w" | jq '.["is-floating"]')
+
+  # Skip unmanaged windows
+  [ "$IS_MANAGED" = "false" ] && continue
 
   if $should_float && [ "$IS_FLOAT" = "false" ]; then
     yabai -m window "$ID" --toggle float

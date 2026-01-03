@@ -42,6 +42,8 @@ yabai -m rule --add app="^System Settings$" manage=off
 yabai -m rule --add app="^Calculator$" manage=off
 yabai -m rule --add app="^Karabiner-Elements$" manage=off
 yabai -m rule --add app="^Finder$" manage=off
+yabai -m rule --add app="^qemu-system-aarch64$" manage=off
+yabai -m rule --add app="^Simulator$" manage=off layer=above
 
 ########################################
 # App → Space assignment
@@ -91,5 +93,10 @@ yabai -m signal --add event=space_changed \
 
 yabai -m signal --add event=space_changed \
   action="$HOME/.yabai/reapply-float-for-space.sh"
+
+yabai -m signal --add \
+  event=window_created \
+  app="^qemu-system-aarch64$" \
+  action="sleep 0.5 && yabai -m window --toggle float"
 
 echo "yabai configuration loaded.."

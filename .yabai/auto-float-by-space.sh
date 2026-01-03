@@ -4,7 +4,11 @@ SPACE_INDEX=$(yabai -m query --spaces --space | jq '.index')
 WINDOW_JSON=$(yabai -m query --windows --window)
 
 WINDOW_ID=$(echo "$WINDOW_JSON" | jq '.id')
+IS_MANAGED=$(echo "$WINDOW_JSON" | jq '.["is-managed"]')
 IS_FLOATING=$(echo "$WINDOW_JSON" | jq '.["is-floating"]')
+
+# Skip unmanaged windows
+[ "$IS_MANAGED" = "false" ] && exit 0
 
 FLOAT_SPACES=(5 10)
 

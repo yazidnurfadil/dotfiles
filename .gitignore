@@ -21,8 +21,10 @@
 !.config/karabiner/karabiner.json
 
 !.yabai/
-!.yabai/auto-float-by-space.sh
-!.yabai/reapply-float-for-space.sh
+!.yabai/*.sh
 
 !.vscode/
 !.vscode/settings.json
+
+!.zsh/
+!.zsh/*.zsh
