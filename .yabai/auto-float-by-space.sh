@@ -10,7 +10,20 @@ IS_FLOATING=$(echo "$WINDOW_JSON" | jq '.["is-floating"]')
 # Skip unmanaged windows
 [ "$IS_MANAGED" = "false" ] && exit 0
 
-FLOAT_SPACES=(5 10)
+# Skip manually-floated windows
+MANUAL_FILE=/tmp/yabai_manual_float
+if [ -f "$MANUAL_FILE" ] && grep -qx "$WINDOW_ID" "$MANUAL_FILE"; then
+  exit 0
+fi
+
+# Float spaces: 5 + either 10 (single) or 15 (external)
+DISPLAY_COUNT=$(yabai -m query --displays | jq 'length')
+FLOAT_SPACES=(5)
+if [ "$DISPLAY_COUNT" -gt 1 ]; then
+  FLOAT_SPACES+=(15)
+else
+  FLOAT_SPACES+=(10)
+fi
 
 should_float=false
 for s in "${FLOAT_SPACES[@]}"; do

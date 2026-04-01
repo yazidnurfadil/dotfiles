@@ -23,4 +23,4 @@ alt - 9 : ~/.yabai/space-map.sh focus 9
 alt - 0 : ~/.yabai/space-map.sh focus 0
 
 # Float toggle
-alt - space : yabai -m window --toggle float
+alt - space : ~/.yabai/toggle-float.sh
