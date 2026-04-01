@@ -9,7 +9,7 @@ fi
 yabai -m config                                 \
     external_bar                 off:40:0       \
     menubar_opacity              1.0            \
-    mouse_follows_focus          on             \
+    mouse_follows_focus          off            \
     focus_follows_mouse          on             \
     display_arrangement_order    default        \
     window_origin_display        default        \
@@ -98,5 +98,14 @@ yabai -m signal --add \
   event=window_created \
   app="^qemu-system-aarch64$" \
   action="sleep 0.5 && yabai -m window --toggle float"
+
+yabai -m signal --add event=window_created \
+  action="$HOME/.yabai/float-unmanaged.sh"
+
+yabai -m signal --add event=display_added \
+  action="$HOME/.yabai/shift-spaces-external.sh"
+
+yabai -m signal --add event=display_removed \
+  action="$HOME/.yabai/shift-spaces-external.sh"
 
 echo "yabai configuration loaded.."
