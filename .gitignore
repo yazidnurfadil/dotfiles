@@ -20,6 +20,8 @@
 !.config/karabiner/
 !.config/karabiner/karabiner.json
 
+!.config/starship.toml
+
 !.yabai/
 !.yabai/*.sh
 

@@ -1,3 +1,5 @@
+BREW_PREFIX="/opt/homebrew"
+
 ###############################################################################
 # VS Code–like word navigation (best-effort ZLE implementation)
 # Approximates VS Code default `wordPattern`
@@ -38,11 +40,6 @@ export HISTFILESIZE=500000
 export HISTSIZE=100000
 export SAVEHIST=100000
 
-if [ ! -d $(dirname $HISTFILE) ]; then
-    echo "$(dirname $HISTFILE)/ directory does not exist. Creating it now..."
-    mkdir -p $(dirname $HISTFILE)
-fi
-
 setopt INC_APPEND_HISTORY 
 setopt SHARE_HISTORY
 setopt HIST_EXPIRE_DUPS_FIRST
@@ -52,22 +49,24 @@ setopt HIST_IGNORE_SPACE
 setopt HIST_FIND_NO_DUPS
 setopt HIST_SAVE_NO_DUPS
 
-source $(brew --prefix)/opt/zsh-autosuggestions/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source $(brew --prefix)/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
-source $(brew --prefix)/opt/zsh-history-substring-search/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+source $BREW_PREFIX/opt/zsh-autosuggestions/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $BREW_PREFIX/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
+source $BREW_PREFIX/opt/zsh-history-substring-search/share/zsh-history-substring-search/zsh-history-substring-search.zsh
 
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
 
 autoload -Uz compinit;
-compinit
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+  compinit
+else
+  compinit -C  # skip security check, use cache
+fi
 
 zstyle ':completion:*' menu select
 
-source $(brew --prefix)/opt/spaceship/spaceship.zsh
-[[ -r "$HOME/.zsh/plugins/spaceship-react/spaceship-react.plugin.zsh" ]] && source "$HOME/.zsh/plugins/spaceship-react/spaceship-react.plugin.zsh"
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
+eval "$(starship init zsh)"
 
 ## [Completion]
 ## Completion scripts setup. Remove the following line to uninstall
@@ -85,17 +84,47 @@ export PATH="$PATH:$ANDROID_HOME/platform-tools"
 export ZSH_HISTORY_SYNC_SCRIPT_PATH=$HOME/.zsh/plugins/zsh-history-sync/sync-history.sh
 export ZSH_HISTORY_SYNC_GIT_REPO_PATH=
 export ZSH_HISTORY_SYNC_GPG_KEY_UID=
-export PATH="$(brew --prefix)/opt/postgresql@18/bin:$PATH"
+export PATH="$BREW_PREFIX/opt/postgresql@18/bin:$PATH"
 export PATH="$HOME/.jenv/bin:$PATH"
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 
-eval "$(zoxide init zsh)"
-eval "$(pyenv init -)"
-eval "$(rbenv init - --no-rehash zsh)"
+z() {
+  unfunction z
+  eval "$(command zoxide init zsh)"
+  z "$@"
+}
+zi() {
+  unfunction zi
+  eval "$(command zoxide init zsh)"
+  zi "$@"
+}
+
+pyenv() {
+  unfunction pyenv
+  eval "$(command pyenv init -)"
+  pyenv "$@"
+}
+
+rbenv() {
+  unfunction rbenv
+  eval "$(command rbenv init - --no-rehash zsh)"
+  rbenv "$@"
+}
+
+jenv() {
+  unfunction jenv
+  eval "$(command jenv init -)"
+  jenv "$@"
+}
+
+fnm() {
+  unfunction fnm
+  eval "$(command fnm env)"
+  fnm "$@"
+}
+
 eval "$(direnv hook zsh)"
-eval "$(jenv init -)"
-eval "$(fnm env)"
 
 if [[ "$INSIDE_IDE" != "1" && -z "$TMUX" && $- == *i* ]] && command -v tmux >/dev/null; then
   tmux
